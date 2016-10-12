@@ -1,0 +1,70 @@
+public class MyRobot extends SgRbtNode{
+    public final static int BODY = 0;
+    public final static int UPPER_ARM_RIGHT = 1;
+    public final static int UPPER_ARM_LEFT = 2;
+    public final static int LOWER_ARM_RIGHT = 3;
+    public final static int LOWER_ARM_LEFT = 4;
+    public final static int UPPER_LEG_RIGHT = 5;
+    public final static int UPPER_LEG_LEFT = 6;
+    public final static int LOWER_LEG_RIGHT = 7;
+    public final static int LOWER_LEG_LEFT = 8;
+    public final static int HEAD = 9;
+    int NUM_JOINTS = 10, NUM_SHAPES = 10;
+    private float[][] colors;
+    ShapeDesc shapeDesc[];
+    JointDesc jointDesc[];
+    SgTransformNode jointNodes[];
+    private float[] color = new float[3];
+
+    public SgRbtNode constructRobot(float[] rColor){
+        SgRbtNode base = new SgRbtNode();
+
+        float ARM_LEN = 0.6f,ARM_THICK = 0.25f,LEG_LEN = 0.7f,
+                LEG_THICK = 0.25f, TORSO_LEN = 0.9f, TORSO_THICK = 0.4f,
+                TORSO_WIDTH = 0.7f,HEAD_SIZE = 0.3f;
+
+        jointDesc = new JointDesc[NUM_JOINTS];
+        jointDesc[BODY] = new JointDesc(-1); // torso
+        jointDesc[UPPER_ARM_RIGHT] = new JointDesc(BODY,  TORSO_WIDTH + ARM_LEN/2 , TORSO_LEN/2, 0); // upper right arm
+        jointDesc[UPPER_ARM_LEFT] = new JointDesc(BODY, -TORSO_WIDTH - ARM_LEN/2, TORSO_LEN/2, 0); // upper left arm
+        jointDesc[LOWER_ARM_RIGHT] = new JointDesc(UPPER_ARM_RIGHT,  ARM_LEN, 0, 0); // lower right arm
+        jointDesc[LOWER_ARM_LEFT] = new JointDesc(UPPER_ARM_LEFT, -ARM_LEN, 0, 0); // lower left arm
+        jointDesc[UPPER_LEG_RIGHT] = new JointDesc(BODY, TORSO_WIDTH-LEG_THICK/2, -TORSO_LEN- LEG_LEN/2, 0); // upper right leg
+        jointDesc[UPPER_LEG_LEFT] = new JointDesc(BODY, -TORSO_WIDTH+LEG_THICK/2, -TORSO_LEN- LEG_LEN/2, 0); // upper left leg
+        jointDesc[LOWER_LEG_RIGHT] = new JointDesc(UPPER_LEG_RIGHT, 0, -LEG_LEN, 0); // lower right leg
+        jointDesc[LOWER_LEG_LEFT] = new JointDesc(UPPER_LEG_LEFT, 0, -LEG_LEN, 0); // lower left
+        jointDesc[HEAD] = new JointDesc(BODY, 0, TORSO_LEN + HEAD_SIZE*2, 0); // head
+
+        shapeDesc = new ShapeDesc[NUM_SHAPES];
+        shapeDesc[BODY] = new ShapeDesc(BODY, 0,0,0, TORSO_WIDTH, TORSO_LEN, TORSO_THICK, new Cube()); // torso
+        shapeDesc[UPPER_ARM_RIGHT] = new ShapeDesc(UPPER_ARM_RIGHT, 0,0,0, ARM_LEN/2, ARM_THICK/2, ARM_THICK/2, new Cube()); // upper right arm
+        shapeDesc[UPPER_ARM_LEFT] = new ShapeDesc(UPPER_ARM_LEFT, 0,0,0, ARM_LEN/2, ARM_THICK/2, ARM_THICK/2, new Cube()); // upper left arm
+        shapeDesc[LOWER_ARM_RIGHT] = new ShapeDesc(LOWER_ARM_RIGHT,0,0,0, ARM_LEN, ARM_THICK, ARM_THICK, new Cube()); // lower right arm
+        shapeDesc[LOWER_ARM_LEFT] = new ShapeDesc(LOWER_ARM_LEFT, 0,0,0, ARM_LEN, ARM_THICK, ARM_THICK, new Cube()); // lower left arm
+        shapeDesc[UPPER_LEG_RIGHT] = new ShapeDesc(UPPER_LEG_RIGHT, 0,0,0, LEG_THICK/2, LEG_LEN/2, LEG_THICK/2, new Cube()); // upper right leg
+        shapeDesc[UPPER_LEG_LEFT] = new ShapeDesc(UPPER_LEG_LEFT, 0,0,0, LEG_THICK/2, LEG_LEN/2, LEG_THICK/2, new Cube()); // upper left leg
+        shapeDesc[LOWER_LEG_RIGHT] = new ShapeDesc(LOWER_LEG_RIGHT, 0,0,0, LEG_THICK, LEG_LEN, LEG_THICK, new Cube()); // lower right leg
+        shapeDesc[LOWER_LEG_LEFT] = new ShapeDesc(LOWER_LEG_LEFT, 0,0,0, LEG_THICK, LEG_LEN, LEG_THICK, new Cube()); // lower left leg
+        shapeDesc[HEAD] = new ShapeDesc(HEAD, 0,0,0, HEAD_SIZE/2, HEAD_SIZE/2, HEAD_SIZE/2, new Sphere()); // head
+
+        jointNodes = new SgRbtNode[NUM_JOINTS];
+        for(int i = 0; i < NUM_JOINTS; ++i){
+            if(jointDesc[i].parent == -1){
+                jointNodes[i] = base;
+            }
+            else {
+                jointNodes[i]= new SgRbtNode(new RigTForm(new float[]{jointDesc[i].x, jointDesc[i].y, jointDesc[i].z}));
+                jointNodes[jointDesc[i].parent].addChild(jointNodes[i]);
+            }
+        }
+        for (int i = 0; i < NUM_SHAPES; ++i) {
+            SgGeometryShapeNode shape = new SgGeometryShapeNode(shapeDesc[i].geometry,
+                    rColor,
+                    new float[]{shapeDesc[i].x, shapeDesc[i].y, shapeDesc[i].z},
+                    new float[]{0, 0, 0},
+                    new float[]{shapeDesc[i].sx, shapeDesc[i].sy, shapeDesc[i].sz});
+            jointNodes[shapeDesc[i].parentJointId].addChild(shape);
+        }
+        return base;
+    }
+}
